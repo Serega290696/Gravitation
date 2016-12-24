@@ -5,14 +5,18 @@ import universe.mathematics.ThreeVector;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Space {
+public class Spacetime {
   private final Physics physics;
   private final int dimensionality;
+  private long absoluteTime;
   private List<Angel> angels;
   private final Object angelsLock = new Object();
   private List<Atom> atoms = new ArrayList<>();
+  private boolean stopUniverse;
 
-  public Space(Physics physics, int dimensionality) {
+  private final Object stopMonitor = new Object();
+
+  public Spacetime(Physics physics, int dimensionality) {
     this.physics = physics;
     this.dimensionality = dimensionality;
   }
@@ -28,14 +32,14 @@ public class Space {
 
     Atom adam = new Atom.AtomCreator()
         .setName("Adam")
-        .setWeight(5)
+        .setWeight(25)
         .setSpeed(new ThreeVector(0, 0, 0))
         .setPosition(new ThreeVector(30, 50, 0))
         .setMarkedByGod(true)
         .build();
     Atom eve = new Atom.AtomCreator()
         .setName("Eve")
-        .setWeight(5)
+        .setWeight(25)
         .setSpeed(new ThreeVector(0, 0, 0))
         .setPosition(new ThreeVector(50, 60, 0))
         .setMarkedByGod(true)
@@ -43,6 +47,7 @@ public class Space {
 
     atoms.add(adam);
     atoms.add(eve);
+    absoluteTime = 0;
   }
 
   private void createAngels() {
@@ -69,16 +74,23 @@ public class Space {
 
   public void live() {
     long lastInstant = System.currentTimeMillis();
+    long elapsedTime;
+    long waitingTime;
     while (!God.ONE.isGodsWrath()) {
+      System.out.println("!God.ONE.isGodsWrath() = " + !God.ONE.isGodsWrath());
       nextInstant();
       // todo wait angels
-      long waitingTime = (long) (UniverseConfigurations.MOMENT_SIZE * 1000 - (System.currentTimeMillis() - lastInstant));
+      elapsedTime = System.currentTimeMillis() - lastInstant;
+      waitingTime = (long) (UniverseConfigurations.MOMENT_SIZE * 1000 - elapsedTime);
       if (waitingTime > 0) {
+        absoluteTime += waitingTime;
         try {
-          Thread.sleep((long) (UniverseConfigurations.MOMENT_SIZE * 1000 - (System.currentTimeMillis() - lastInstant)));
+          Thread.sleep(waitingTime);
         } catch (InterruptedException e) {
           e.printStackTrace();
         }
+      } else {
+        absoluteTime += waitingTime;
       }
       lastInstant = System.currentTimeMillis();
     }
@@ -89,6 +101,17 @@ public class Space {
       if (!atom.hasGuardianAngel()) {
         chooseGuardianAngel().addAtom(atom);
         atom.setHasGuardianAngel(true);
+      }
+    }
+    synchronized (stopMonitor) {
+      if (stopUniverse) {
+        System.out.println("Stopped");
+        try {
+          stopMonitor.wait();
+          System.out.println("Resumed");
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
       }
     }
     physics.nextInstant();
@@ -106,5 +129,20 @@ public class Space {
 
   public List<Atom> getAtoms() {
     return atoms;
+  }
+
+  public boolean isStopUniverse() {
+    return stopUniverse;
+  }
+
+  public void resume() {
+    stopUniverse = false;
+    synchronized (stopMonitor) {
+      stopMonitor.notifyAll();
+    }
+  }
+
+  public void stop() {
+    stopUniverse = true;
   }
 }

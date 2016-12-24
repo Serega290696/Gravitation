@@ -68,10 +68,10 @@ public class Artist {
 //        if(Game.getInstance().player.position.x > 90) {
 //            Game.getInstance().setXshift(a);
 //        }
-//        if(Game.getInstance().player.position.y < 10*Cause.ratio) {
+//        if(Game.getInstance().player.position.y < 10*PrimeCause.ratio) {
 //            Game.getInstance().setYshift(-a);
 //        }
-//        if(Game.getInstance().player.position.y > 90*Cause.ratio) {
+//        if(Game.getInstance().player.position.y > 90*PrimeCause.ratio) {
 //            Game.getInstance().setYshift(a);
 //        }
     x -= visualizator.getShift().x;

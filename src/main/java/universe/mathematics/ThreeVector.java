@@ -1,6 +1,6 @@
 package universe.mathematics;
 
-public class ThreeVector {
+public class ThreeVector implements Cloneable {
   public double x;
   public double y;
   public double z;
@@ -44,5 +44,15 @@ public class ThreeVector {
         ", " + MathUtils.round(y, 10) +
         ", " + MathUtils.round(z, 10) +
         ')';
+  }
+
+  @Override
+  public ThreeVector clone() {
+//    System.err.println("[WARN] in clone()");
+    return new ThreeVector(x, y, z);
+  }
+
+  public ThreeVector normalize() {
+    return new ThreeVector(x / this.module(), y / this.module(), z / this.module());
   }
 }

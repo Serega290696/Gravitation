@@ -3,7 +3,8 @@ package universe;
 public class Universe {
   private final static God god = God.ONE;
   private Physics physics;
-  private Space space;
+  private Spacetime spacetime;
+  private boolean stopped;
 
   public Universe(NewtonPhysics physics, int dimensionality) {
     andGodSay(physics, dimensionality);
@@ -11,18 +12,32 @@ public class Universe {
 
   private void andGodSay(NewtonPhysics physics, int dimensionality) {
     this.physics = physics;
-    this.space = new Space(physics, dimensionality);
+    this.spacetime = new Spacetime(physics, dimensionality);
   }
 
-  public Space getSpace() {
-    return space;
+  public Spacetime getSpacetime() {
+    return spacetime;
   }
 
   public void bigBang() {
-    space.bigBang();
+    spacetime.bigBang();
   }
 
   public void live() {
-    space.live();
+    spacetime.live();
+  }
+
+  public boolean isStopped() {
+    return stopped;
+  }
+
+  public void resume() {
+    spacetime.resume();
+    stopped = false;
+  }
+
+  public void stop() {
+    spacetime.stop();
+    stopped = true;
   }
 }

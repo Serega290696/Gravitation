@@ -38,15 +38,17 @@ public class Visualizator {
   private final int D_WIDTH;
   private final int D_HEIGHT;
   public final float DEFAULT_EM;
+  private final Universe universe;
   private final Artist artist;
 
+  private List<Atom> atoms;
+  public float em;
   private ThreeVector shift;
   public double speedFactor;
-  public float em;
-  private List<Atom> atoms;
 
   public Visualizator(Universe universe) {
-    atoms = universe.getSpace().getAtoms();
+    this.universe = universe;
+    atoms = universe.getSpacetime().getAtoms();
     shift = new ThreeVector(0, 0, 0);
     gameTitle = "Game";
     DELAY = (int) (UniverseConfigurations.MOMENT_SIZE * 1000);
@@ -60,10 +62,16 @@ public class Visualizator {
     initDisplay();
     initGL();
     artist = new Artist(this);
-    System.out.println("FPS = " + FPS);
   }
 
+
   public void visualize() {
+    Thread controlPanelThread = new Thread(() -> {
+      UniverseControlPanel.setUniverse(universe);
+      UniverseControlPanel.launchControlPanel();
+    });
+    controlPanelThread.setDaemon(true);
+    controlPanelThread.start();
     artist.init();
     visualizationLoop();
     cleanUp();
@@ -83,6 +91,7 @@ public class Visualizator {
       }
     }
     God.ONE.visualizatingFinishNotify();
+    God.ONE.oblivion();
   }
 
   private void initDisplay() {

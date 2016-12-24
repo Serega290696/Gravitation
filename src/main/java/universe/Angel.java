@@ -8,11 +8,12 @@ public class Angel extends Thread {
   private final List<Atom> ownAtoms;
   private final Physics physics;
 
-  public Angel(String name, Space space) {
+  public Angel(String name, Spacetime space) {
     super.setName(name);
     this.allAtoms = space.getAtoms();
     this.ownAtoms = new ArrayList<>();
     this.physics = space.getPhysics();
+    setDaemon(true);
   }
 
   public void addAtom(Atom atom) {
@@ -29,7 +30,12 @@ public class Angel extends Thread {
           e.printStackTrace();
         }
         if (!ownAtoms.isEmpty()) {
-          physics.gravity(allAtoms, ownAtoms);
+          try {
+            physics.gravity(allAtoms, ownAtoms);
+            physics.electromagnetism(allAtoms, ownAtoms);
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
         }
       }
     }

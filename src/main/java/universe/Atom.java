@@ -8,22 +8,24 @@ import universe.view_trash.enums.DrawFigure;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Atom {
-  private final String name;
-  private double weight;
-  private ThreeVector size;
-  private ThreeVector position;
-  private ThreeVector speed;
-  private ThreeVector acceleration;
-  private ThreeVector power;
-  private boolean markedByGod;
-  private List<Event> bindEvents;
-  private boolean destroyed = false;
-  private DrawFigure figure = DrawFigure.CIRCLE;
-  private ColorEnum color;
-  private double rotation = 0;
-  private double opacity = 1;
-  private boolean hasGuardianAngel;
+public class Atom implements Cloneable {
+  protected final String name;
+  protected double weight;
+  protected ThreeVector size;
+  protected ThreeVector position;
+  protected ThreeVector speed;
+  protected ThreeVector acceleration;
+  protected ThreeVector power;
+  protected boolean markedByGod;
+  protected List<Event> bindEvents;
+  protected boolean destroyed = false;
+  protected DrawFigure figure = DrawFigure.CIRCLE;
+  protected ColorEnum color;
+  protected double rotation = 0;
+  protected double opacity = 1;
+  protected boolean hasGuardianAngel;
+  protected ThreeVector previousPosition;
+  protected long relativelyTime;
 
   public Atom(double weight, ThreeVector size, ThreeVector position, ThreeVector speed, boolean markedByGod) {
     this(null, weight, size, position, speed, markedByGod);
@@ -43,11 +45,17 @@ public class Atom {
   }
 
   public void update(ThreeVector power) {
+    bindEvents.add(new Event(this.clone(), relativelyTime));
     this.power = power;
     acceleration = power.divide(weight);
     speed = speed.plus(acceleration.multiply(UniverseConfigurations.MOMENT_SIZE));
+    previousPosition = position.clone();
     position = position.plus(speed.multiply(UniverseConfigurations.MOMENT_SIZE));
     System.out.println(this);
+    relativelyTime += UniverseConfigurations.MOMENT_SIZE * 1000;
+    if(!markedByGod && bindEvents.size() > 3) {
+      bindEvents.remove(0);
+    }
   }
 
   @Override
@@ -57,6 +65,31 @@ public class Atom {
         ", speed=" + speed +
         ", power=" + power +
         ", " + weight + ", size=" + size + ")";
+  }
+
+  @Override
+  protected Atom clone() {
+    return new Atom(name, weight, size.clone(), position.clone(), speed.clone(), markedByGod);
+  }
+
+  protected ThreeVector getPower() {
+    return power;
+  }
+
+  public List<Event> getBindEvents() {
+    return bindEvents;
+  }
+
+  public boolean isDestroyed() {
+    return destroyed;
+  }
+
+  public ThreeVector getPreviousPosition() {
+    return previousPosition;
+  }
+
+  protected long getRelativelyTime() {
+    return relativelyTime;
   }
 
   public DrawFigure getFigure() {
@@ -81,6 +114,15 @@ public class Atom {
 
   public void setHasGuardianAngel(boolean hasGuardianAngel) {
     this.hasGuardianAngel = hasGuardianAngel;
+  }
+
+  public void returnOnPreviousState() {
+    Atom lastState = bindEvents.get(bindEvents.size()-1).getAtom();
+    this.weight = lastState.getWeight();
+    this.size = lastState.getSize();
+    this.position = lastState.getPosition();
+    this.speed = lastState.getSpeed();
+    this.markedByGod = lastState.isMarkedByGod();
   }
 
   static class AtomCreator {
@@ -129,6 +171,7 @@ public class Atom {
       return new Atom(name, weight, size, position, speed, markedByGod);
     }
   }
+
 
   public double getWeight() {
     return weight;
