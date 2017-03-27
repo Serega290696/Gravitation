@@ -6,11 +6,11 @@ import being.exceptions.UniverseCreationException;
 import being.mathematics.ThreeVector;
 import being.physics.PhysicsConfigurations;
 import being.universe.*;
-import being.view_trash.Artist;
-import being.view_trash.UniverseControlPanel;
-import being.view_trash.enums.ColorEnum;
-import being.view_trash.enums.DrawFigureType;
-import being.view_trash.enums.ActionType;
+import being.view.Artist;
+import being.view.UniverseControlPanel;
+import being.view.enums.ColorEnum;
+import being.view.enums.DrawFigureType;
+import being.view.enums.ActionType;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -165,7 +165,7 @@ public enum God {
 
         private int leftMouseDownCounter = 0;
         private int rightMouseDownCounter = 0;
-        private boolean mouseGrabbed = true; //todo
+        private boolean mouseGrabbed = false; //todo
         private boolean showOnlyMarkedAtoms;
         private List<KeyboardEvent> keyboardEvents = new ArrayList<>();
         private double zoomDecreasingSpeed = 0;
@@ -414,11 +414,11 @@ public enum God {
         private void initDisplay() {
 
             try {
+                Display.setLocation(50, 20);
                 Display.setDisplayMode(new DisplayMode(D_WIDTH, D_HEIGHT));
                 Display.create();
                 Display.setVSyncEnabled(true);
                 Display.setTitle(title);
-
                 Keyboard.create();
                 Mouse.create();
                 Mouse.setGrabbed(mouseGrabbed);

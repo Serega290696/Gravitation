@@ -1,4 +1,4 @@
-package being.view_trash;
+package being.view;
 
 import being.universe.AbstractUniverse;
 import javafx.animation.KeyFrame;
@@ -23,8 +23,8 @@ public class UniverseControlPanel extends Application {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/universe_control_panel.fxml"));
         Parent root = fxmlLoader.load();
         primaryStage.setTitle("Universe42");
-        primaryStage.setX(1100);
-        primaryStage.setY(10);
+        primaryStage.setX(850);
+        primaryStage.setY(20);
         Scene scene = new Scene(root);
         primaryStage.setScene(scene);
         primaryStage.show();

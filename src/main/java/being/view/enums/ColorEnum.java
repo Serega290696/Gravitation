@@ -1,4 +1,4 @@
-package being.view_trash.enums;
+package being.view.enums;
 
 public enum ColorEnum {
   WHITE(0.8f, 0.8f, 0.8f),

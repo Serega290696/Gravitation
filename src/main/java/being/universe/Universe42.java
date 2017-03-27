@@ -14,7 +14,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class Universe42 extends AbstractUniverse<NewtonPhysics, Atom> {
     private static final boolean FOLLOW_IF_ONE_MARKED_ATOM = false;
     private static final int ANGELS_AMOUNT = 1;
-    private static final String DEFAULT_STATE_NAME = "default_1";//"default_1"
+    private static final String DEFAULT_STATE_NAME = "empty";//"default_1"
     private static final String STATE_FILE_NAME = "states.out";
 
     private final List<Angel> angels = new ArrayList<>();

@@ -4,8 +4,8 @@ package being.elements;
 import being.God;
 import being.physics.PhysicsConfigurations;
 import being.mathematics.ThreeVector;
-import being.view_trash.enums.ColorEnum;
-import being.view_trash.enums.DrawFigureType;
+import being.view.enums.ColorEnum;
+import being.view.enums.DrawFigureType;
 
 import java.io.Serializable;
 import java.util.*;

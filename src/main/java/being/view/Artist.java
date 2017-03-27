@@ -1,4 +1,4 @@
-package being.view_trash;
+package being.view;
 
 import being.God;
 import being.mathematics.ThreeVector;
@@ -7,8 +7,8 @@ import org.newdawn.slick.*;
 import org.newdawn.slick.Color;
 import org.newdawn.slick.openal.Audio;
 import org.newdawn.slick.opengl.Texture;
-import being.view_trash.enums.ColorEnum;
-import being.view_trash.enums.DrawFigureType;
+import being.view.enums.ColorEnum;
+import being.view.enums.DrawFigureType;
 import org.newdawn.slick.util.ResourceLoader;
 
 import java.awt.*;

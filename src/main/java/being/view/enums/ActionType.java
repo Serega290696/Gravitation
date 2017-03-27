@@ -1,4 +1,4 @@
-package being.view_trash.enums;
+package being.view.enums;
 
 public class ActionType {
     public static final int NO_ACTION                = 0x00000001;//1

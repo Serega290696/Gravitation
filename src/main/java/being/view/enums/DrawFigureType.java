@@ -1,4 +1,4 @@
-package being.view_trash.enums;
+package being.view.enums;
 
 public enum DrawFigureType {
 

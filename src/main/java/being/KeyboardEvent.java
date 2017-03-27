@@ -1,6 +1,6 @@
 package being;
 
-import being.view_trash.enums.ActionType;
+import being.view.enums.ActionType;
 
 import java.util.Arrays;
 

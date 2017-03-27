@@ -1,4 +1,4 @@
-package being.view_trash;
+package being.view;
 
 import being.God;
 import being.elements.Atom;
@@ -161,14 +161,18 @@ public class UniverseControlPanelController {
             );
             objectsTable.setEditable(true);
             TableColumn<Atom, String> name = new TableColumn<>("Name");
-            name.setEditable(true);
+//            name.setEditable(true);
             name.setMinWidth(COLUMN_WIDTH);
             name.<Atom, String>setCellValueFactory(
                     new PropertyValueFactory<>("name"));
 
             TableColumn<Atom, Double> weight = new TableColumn<>("Weight");
+//            weight.setEditable(true);
             weight.setMinWidth(COLUMN_WIDTH);
+            weight.setResizable(true);
             weight.setCellValueFactory(p ->
+//                    new PropertyValueFactory<Atom, String>("weight"));
+//                    new PropertyValueFactory<Atom, Double>("weight"));
                     new ReadOnlyObjectWrapper<Double>(MathUtils.round(p.getValue().getWeight())));
             weight.<Atom, Double>setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
             weight.setOnEditCommit(
@@ -261,7 +265,7 @@ public class UniverseControlPanelController {
         if (!God.ONE.isGodsWrath() && universe != null) {
             ObservableList<Atom> items = objectsTable.getItems();
             Set<Atom> objects = universe.getObjects();
-            objectsTable.refresh();
+//            objectsTable.refresh();
 //            refresh();
 //            if (!forcedToRefresh && objects.containsAll(items) && items.size() != 0 && items.size() != objects.size()) {// todo dangerous checking
 //                objectsTable.refresh();
@@ -337,7 +341,7 @@ public class UniverseControlPanelController {
         );
         TableColumn<Atom, Double> subColumnY = new TableColumn<>("y");
         subColumnY.setMinWidth(COLUMN_WIDTH * 0.5);
-        subColumnY.setMaxWidth(COLUMN_WIDTH * 0.7);
+        subColumnY.setPrefWidth(COLUMN_WIDTH * 0.7);
         subColumnY.<Atom, Double>setCellValueFactory(param -> {
                     switch (columnTitle) {
                         case "position":
@@ -355,7 +359,7 @@ public class UniverseControlPanelController {
         );
         TableColumn<Atom, Double> subColumnZ = new TableColumn<>("z");
         subColumnZ.setMinWidth(COLUMN_WIDTH * 0.5);
-        subColumnZ.setMaxWidth(COLUMN_WIDTH * 0.7);
+        subColumnZ.setPrefWidth(COLUMN_WIDTH * 0.7);
         subColumnZ.<Atom, Double>setCellValueFactory(param -> {
                     switch (columnTitle) {
                         case "position":
@@ -478,11 +482,16 @@ public class UniverseControlPanelController {
             default:
                 return null;
         }
+        subColumnX.setResizable(true);
+        subColumnY.setResizable(true);
+        subColumnZ.setResizable(true);
         bigColumn.getColumns().addAll(subColumnX, subColumnY, subColumnZ);
+        bigColumn.setResizable(true);
         if (columnTitle.equals("speed") || columnTitle.equals("acceleration")) {
             TableColumn<Atom, Double> module = new TableColumn<>("module");
+            module.setResizable(true);
             module.setMinWidth(COLUMN_WIDTH * 0.5);
-            module.setMaxWidth(COLUMN_WIDTH * 0.7);
+            module.setPrefWidth(COLUMN_WIDTH * 0.7);
             module.<Atom, Double>setCellValueFactory(param -> {
                         switch (columnTitle) {
                             case "speed":

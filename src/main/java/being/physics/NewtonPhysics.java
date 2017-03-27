@@ -4,7 +4,7 @@ import being.elements.Angel;
 import being.elements.Atom;
 import being.mathematics.MathUtils;
 import being.mathematics.ThreeVector;
-import being.view_trash.enums.ColorEnum;
+import being.view.enums.ColorEnum;
 
 import java.util.*;
 
