@@ -1,29 +1,27 @@
 package being;
 
+import being.elements.Atom;
+import being.elements.Event;
+import being.exceptions.UniverseCreationException;
+import being.mathematics.ThreeVector;
 import being.physics.PhysicsConfigurations;
-import being.universe.AbstractUniverse;
-import being.universe.UniverseFactory;
-import being.universe.UniverseType;
+import being.universe.*;
+import being.view_trash.Artist;
+import being.view_trash.UniverseControlPanel;
+import being.view_trash.enums.ColorEnum;
+import being.view_trash.enums.DrawFigureType;
+import being.view_trash.enums.ActionType;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
-import being.elements.Atom;
-import being.exceptions.UniverseCreationException;
-import being.mathematics.ThreeVector;
-import being.view_trash.Artist;
-import being.view_trash.UniverseControlPanel;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.glLoadIdentity;
 
 public enum God {
     ONE;
@@ -31,7 +29,7 @@ public enum God {
     public final GodMind MIND;
     private final Set<AbstractUniverse> universes;
 
-    public boolean pause = false;
+//    public boolean pause = false;
 
     private boolean godsWrath;
     private boolean oblivion;
@@ -39,8 +37,11 @@ public enum God {
     private static final boolean SHOW_CONTROL_PANEL = true;
     private static final boolean SHOW_VISUALISATION = true;
 
+    private static int maxShownEventsPerAtom = PhysicsConfigurations.NewtonPhysicsConfigurations.MAX_EVENTS_AMOUNT_PER_ATOM / 3;
+    private boolean showSpeedVector = true;
+    private boolean showAccelerationVector = true;
+
     God() {
-        System.out.println("God.God");
         godsWrath = false;
         oblivion = false;
 
@@ -54,8 +55,9 @@ public enum God {
 
     public void eatAppleOfKnowledge() {
         System.out.println("WRATH");
-        godsWrath = true;
-        universes.clear();
+//        godsWrath = true;
+        universes.forEach(AbstractUniverse::bigBang);
+//        universes.clear();
     }
 
     //Say "Let there be light"
@@ -84,20 +86,63 @@ public enum God {
     }
 
     public boolean isPause() {
-        return pause;
+        return universes.iterator().next().isPaused();
     }
 
     public void play() {
         universes.forEach(AbstractUniverse::resume);
-        pause = false;
     }
 
     public void pause() {
         universes.forEach(AbstractUniverse::pause);
-        pause = true;
+    }
+
+    public static int getMaxShownEventsPerAtom() {
+        return maxShownEventsPerAtom;
+    }
+
+    public static void setMaxShownEventsPerAtom(int maxShownEventsPerAtom) {
+        God.maxShownEventsPerAtom = maxShownEventsPerAtom;
+    }
+
+    public boolean isShowSpeedVector() {
+        return showSpeedVector;
+    }
+
+    public void setShowSpeedVector(boolean showSpeedVector) {
+        this.showSpeedVector = showSpeedVector;
+    }
+
+    public boolean isShowAccelerationVector() {
+        return showAccelerationVector;
+    }
+
+    public void setShowAccelerationVector(boolean showAccelerationVector) {
+        this.showAccelerationVector = showAccelerationVector;
+    }
+
+    public void clearAllAtoms() {
+        universes.forEach(AbstractUniverse::clearAllAtoms);
+    }
+
+    public void restoreState(String stateTitle) {
+        universes.forEach(u -> u.restoreState(stateTitle));
+    }
+
+    public void saveState(String stateTitle) {
+        universes.forEach(u -> u.saveState(stateTitle));
     }
 
     public class GodMind {
+        private static final double ZOOM_CHANGING_PER_SECOND = 10;
+        private static final float CURSOR_HEIGHT = 30;
+        private static final float CURSOR_WIDTH = 20;
+        public int FONT_TYPE = 1;
+        public int FONT_TYPE_AMOUNT = 5;
+        public int CURSOR_TYPE = 3;
+        public int CURSOR_TYPES_AMOUNT = 3;
+        private ThreeVector lastMousePosition = new ThreeVector(Mouse.getX(), Mouse.getY(), 0);
+
         private AbstractUniverse chosenUniverse;
 
         private final String title;
@@ -118,6 +163,14 @@ public enum God {
         private boolean simulationPanelIsLoaded = false;
         private boolean controlPanelIsLoaded = false;
 
+        private int leftMouseDownCounter = 0;
+        private int rightMouseDownCounter = 0;
+        private boolean mouseGrabbed = true; //todo
+        private boolean showOnlyMarkedAtoms;
+        private List<KeyboardEvent> keyboardEvents = new ArrayList<>();
+        private double zoomDecreasingSpeed = 0;
+        private Set<Atom> objectsSet;
+        private boolean drawNewAtom = true;
 
         private GodMind() {
             if (universes.size() > 0) {
@@ -128,35 +181,31 @@ public enum God {
             }
             shift = new ThreeVector(0, 0, 0);
             title = "God view";
-            DELAY = (int) (PhysicsConfigurations.MOMENT_SIZE * 1000);
+            DELAY = (int) (0.03 * 1000);
             FPS = (int) (1000 / DELAY);
             ratio = 1.0f;
             D_WIDTH = 800;
             D_HEIGHT = 800;
             DEFAULT_EM = D_WIDTH / 100;
-            em = DEFAULT_EM;
+//            em = DEFAULT_EM / 1;
+            em = DEFAULT_EM/ 1_000;
             speedFactor = 1.5;
         }
 
         //show control window
         public void bindToUserMind() {
             updateChosenUniverse();
-//            if (!controlPanelIsShown) {
             Thread controlPanelThread = null;
 
             if (SHOW_CONTROL_PANEL && !controlPanelIsShown) {
                 controlPanelThread = new Thread(() -> {
                     UniverseControlPanel.setUniverse(chosenUniverse);
-//                    if (!controlPanelIsShown) {
                     UniverseControlPanel.launchControlPanel();
-//                    }
                 });
-                controlPanelThread.setDaemon(true);
+                controlPanelThread.setDaemon(false);
                 controlPanelThread.start();
                 controlPanelIsShown = true;
             }
-//            controlPanelIsShown = true;
-//            }
             if (SHOW_VISUALISATION) {
                 System.out.println("simulationPanelIsLoaded = " + simulationPanelIsLoaded);
                 if (!simulationPanelIsLoaded) {
@@ -167,10 +216,7 @@ public enum God {
                     artist.init();
                     simulationPanelIsLoaded = true;
                 }
-                System.out.println("in");
                 if (!simulationPanelIsShown) {
-                    System.out.println("Stat vis loop");
-//            new Thread(() -> {
                     visualizationLoop();
                     if (controlPanelThread != null && controlPanelThread.isAlive()) {
                         controlPanelThread.interrupt();
@@ -178,7 +224,6 @@ public enum God {
                     System.out.println("Clean up");
                     cleanUp();
                     simulationPanelIsLoaded = false;
-//            }).start();
                 }
             }
         }
@@ -189,28 +234,181 @@ public enum God {
 
 
         private void visualizationLoop() {
+            createKeyboardEvent(() -> {
+                if (chosenUniverse.isPaused()) chosenUniverse.resume();
+                else chosenUniverse.pause();
+            }, ActionType.CLICKED, Keyboard.KEY_P);
+            createKeyboardEvent(() -> shift.y -= 3, ActionType.PRESSED, Keyboard.KEY_UP);
+            createKeyboardEvent(() -> shift.y += 3, ActionType.PRESSED, Keyboard.KEY_DOWN);
+            createKeyboardEvent(() -> shift.x -= 3, ActionType.PRESSED, Keyboard.KEY_LEFT);
+            createKeyboardEvent(() -> shift.x += 3, ActionType.PRESSED, Keyboard.KEY_RIGHT);
+            createKeyboardEvent(God.this::eatAppleOfKnowledge, ActionType.CLICKED, Keyboard.KEY_R);
+            createKeyboardEvent(God.this::clearAllAtoms, ActionType.CLICKED, Keyboard.KEY_C);
+            createKeyboardEvent(() -> {
+                universes.forEach(u -> u.mouseClick(
+                        Mouse.getX() / em + shift.x,
+                        100 / em * DEFAULT_EM - Mouse.getY() / em + shift.y,
+                        (double) 5,
+                        0, true));
+            }, ActionType.PRESSED_50_MILLISECONDS, Keyboard.KEY_A);
+            createKeyboardEvent(() -> {
+                universes.forEach(u -> u.mouseClick(
+                        Mouse.getX() / em + shift.x,
+                        100 / em * DEFAULT_EM - Mouse.getY() / em + shift.y,
+                        (double) 20,
+                        0, true));
+            }, ActionType.PRESSED_50_MILLISECONDS, Keyboard.KEY_LSHIFT, Keyboard.KEY_A);
+            objectsSet = chosenUniverse.getObjects();
             while (!God.ONE.isGodsWrath() && !Display.isCloseRequested() && !Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)) {
-//      getInput();
-//      if (!.isPaused()) {
                 render();
-//      }
                 Display.update();
                 Display.sync(FPS);
-                if (Keyboard.isKeyDown(Keyboard.KEY_P)) {
-                    chosenUniverse.pause();
-                    System.out.println("PAUSED");
+                updateKeyboardEventsType();
+                listenKeyboardEvent();
+                // Mouse clicks
+                drawNewAtom = true;
+                if (Mouse.isButtonDown(0)) {
+//                    if (leftMouseDownCounter == 0) {
+                    drawNewAtom = chosenUniverse.mousePush(
+                            Mouse.getX() / em + shift.x,
+                            100 / em * DEFAULT_EM - Mouse.getY() / em + shift.y,
+                            leftMouseDownCounter,
+                            0, false);
+//                    }
+                    leftMouseDownCounter++;
+                } else if (leftMouseDownCounter > 0) {
+                    universes.forEach(u -> u.mouseClick(
+                            Mouse.getX() / em + shift.x,
+                            100 / em * DEFAULT_EM - Mouse.getY() / em + shift.y,
+                            leftMouseDownCounter,
+                            0, false));
+                    leftMouseDownCounter = 0;
                 }
-                if (Keyboard.isKeyDown(Keyboard.KEY_O)) {
-                    chosenUniverse.resume();
+                if (Mouse.isButtonDown(1)) {
+                    rightMouseDownCounter++;
+                } else if (rightMouseDownCounter > 0) {
+                    universes.forEach(u -> u.mouseClick(
+                            Mouse.getX() / em + shift.x,
+                            100 / em * DEFAULT_EM - Mouse.getY() / em + shift.y,
+                            (double) rightMouseDownCounter,
+                            1, false));
+                    rightMouseDownCounter = 0;
                 }
-                if (Keyboard.isKeyDown(Keyboard.KEY_R)) {
-                    eatAppleOfKnowledge();
+                // MOVING
+                if (Mouse.isButtonDown(2)) {
+                    shift.x += (lastMousePosition.x - Mouse.getX()) / em * 1;
+                    shift.y -= (lastMousePosition.y - Mouse.getY()) / em * 1;
                 }
+                // ZOOM
+                int dWheel = Mouse.getDWheel();
+                if (dWheel > 0) {
+                    if (zoomDecreasingSpeed < 1) {
+                        zoomDecreasingSpeed += 10d / FPS;
+                    }
+                } else if (dWheel < 0) {
+                    if (zoomDecreasingSpeed > -1) {
+                        zoomDecreasingSpeed -= 10d / FPS;
+                    }
+                } else {
+                    if (Math.abs(zoomDecreasingSpeed) <= 0.1) {
+                        zoomDecreasingSpeed = 0;
+                    } else {
+                        zoomDecreasingSpeed -= 10d / FPS / 2 * Math.signum(zoomDecreasingSpeed);
+                    }
+                }
+                if (zoomDecreasingSpeed < 0) {
+                    float updatedEm = (float) (em / (1 + (ZOOM_CHANGING_PER_SECOND - 1) / FPS * (-zoomDecreasingSpeed)));
+                    shift.x += (D_WIDTH / em - D_WIDTH / updatedEm) * (1 - (double) Mouse.getX() / D_WIDTH);
+                    shift.y += (D_HEIGHT / em - D_HEIGHT / updatedEm) * ((double) Mouse.getY() / D_HEIGHT);
+                    em = updatedEm;
+                } else if (zoomDecreasingSpeed > 0) {
+                    if (zoomDecreasingSpeed < 1) {
+                        zoomDecreasingSpeed += 1d / FPS;
+                    }
+                    float updatedEm = (float) (em * (1 + (ZOOM_CHANGING_PER_SECOND - 1) / FPS * zoomDecreasingSpeed));
+                    shift.x += (D_WIDTH / em - D_WIDTH / updatedEm) * ((double) Mouse.getX() / D_WIDTH);
+                    shift.y += (D_HEIGHT / em - D_HEIGHT / updatedEm) * (1 - (double) Mouse.getY() / D_HEIGHT);
+                    em = updatedEm;
+                }
+                universes.forEach(u -> u.setMousePosition(((double) Mouse.getX() / D_WIDTH / em * DEFAULT_EM * 100 + shift.x),
+                        ((double) (D_HEIGHT - Mouse.getY()) / D_HEIGHT * 100 / em * DEFAULT_EM + shift.y)));
+                Object focusedAtom = chosenUniverse.getFocusedAtom();
+                if (focusedAtom != null && focusedAtom instanceof Atom) {
+                    shift.x = ((Atom) focusedAtom).getPosition().x - 50 / em * DEFAULT_EM;
+                    shift.y = ((Atom) focusedAtom).getPosition().y - 50 / em * DEFAULT_EM;
+                    shift.z = ((Atom) focusedAtom).getPosition().z - 50 / em * DEFAULT_EM;
+                }
+                lastMousePosition.x = Mouse.getX();
+                lastMousePosition.y = Mouse.getY();
             }
             God.ONE.eatAppleOfKnowledge();
             God.ONE.causeToForget();
             simulationPanelIsLoaded = false;
             System.out.println("END_END");
+        }
+
+        private void updateKeyboardEventsType() {
+            for (KeyboardEvent event : keyboardEvents) {
+                boolean keysPressed = true;
+                for (int key : event.getKeys()) {
+//                    System.out.println("key = " + key);
+                    if (!Keyboard.isKeyDown(key)) {
+                        keysPressed = false;
+                    }
+                }
+                if (Arrays.stream(event.getKeys()).noneMatch(k -> k == Keyboard.KEY_LSHIFT)
+                        && Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
+                    keysPressed = false;
+                }
+                if (Arrays.stream(event.getKeys()).noneMatch(k -> k == Keyboard.KEY_LCONTROL)
+                        && Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) {
+                    keysPressed = false;
+                }
+                if ((event.getCurrentActionType() & ActionType.NO_ACTION) > 0 && keysPressed) {
+                    event.setCurrentActionType(ActionType.CLICKED);
+                } else if ((event.getCurrentActionType() & ActionType.CLICKED) > 0 && keysPressed) {
+                    event.setCurrentActionType(ActionType.PRESSED);
+                }
+                if ((event.getCurrentActionType() & ActionType.PRESSED) > 0 && !keysPressed) {
+                    event.setCurrentActionType(ActionType.RELEASED);
+                }
+                if ((event.getCurrentActionType() & ActionType.PRESSED) > 0 && keysPressed
+                        && System.currentTimeMillis() - event.getLastActionTime() >= 10) {
+                    event.setCurrentActionType(ActionType.PRESSED_50_MILLISECONDS);
+                }
+                if ((event.getCurrentActionType() & ActionType.PRESSED) > 0 && keysPressed
+                        && System.currentTimeMillis() - event.getLastActionTime() >= 200) {
+                    event.setCurrentActionType(ActionType.PRESSED_200_MILLISECONDS);
+                }
+                if ((event.getCurrentActionType() & ActionType.PRESSED) > 0 && keysPressed
+                        && System.currentTimeMillis() - event.getLastActionTime() >= 1000) {
+                    event.setCurrentActionType(ActionType.PRESSED_ONE_SECOND);
+                }
+                if ((event.getCurrentActionType() & ActionType.PRESSED) > 0 && keysPressed
+                        && System.currentTimeMillis() - event.getLastActionTime() >= 2000) {
+                    event.setCurrentActionType(ActionType.PRESSED_TWO_SECONDS);
+                }
+                if ((event.getCurrentActionType() & ActionType.RELEASED) > 0 && keysPressed) {
+                    event.setCurrentActionType(ActionType.CLICKED);
+                }
+                if ((event.getCurrentActionType() & ActionType.RELEASED) > 0 && !keysPressed) {
+                    event.setCurrentActionType(ActionType.NO_ACTION);
+                }
+            }
+        }
+
+        private void createKeyboardEvent(Runnable r, int type, int... triggerKey) {
+            KeyboardEvent event = new KeyboardEvent(r, type, triggerKey);
+            keyboardEvents.add(event);
+        }
+
+        private void listenKeyboardEvent() {
+            for (KeyboardEvent event : keyboardEvents) {
+                if (Arrays.stream(event.getKeys()).allMatch(Keyboard::isKeyDown)
+                        && event.getTriggerActionType() == event.getCurrentActionType()) {
+                    event.run();
+                }
+            }
         }
 
         private void initDisplay() {
@@ -223,7 +421,7 @@ public enum God {
 
                 Keyboard.create();
                 Mouse.create();
-                Mouse.setGrabbed(false);
+                Mouse.setGrabbed(mouseGrabbed);
             } catch (LWJGLException e) {
                 e.printStackTrace();
             }
@@ -257,14 +455,97 @@ public enum God {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glLoadIdentity();
             Set<Atom> renderedObjects = new HashSet<>();
-            Set<Object> objectsSet = chosenUniverse.getObjects();
-            renderedObjects.addAll(objectsSet.stream().filter(o -> o instanceof Atom)
-                    .map(o -> (Atom) o).collect(Collectors.toList()));
-            if (renderedObjects != null && renderedObjects.size() > 0) {
+//            objectsSet = chosenUniverse.getObjects();
+//            while(chosenUniverse.getObjectProcessingStage() != ObjectProcessingStage.DISPLAYING);
+//            while (!chosenUniverse.areObjectsAvailable()) ;
+//            chosenUniverse.setObjectsAvailable(false);
+//            renderedObjects.addAll(objectsSet);
+//            chosenUniverse.setObjectProcessingStage(ObjectProcessingStage.DISTRIBUTION);
+//            chosenUniverse.setObjectsAvailable(true);
+            renderedObjects = objectsSet;
+            if (renderedObjects.size() > 0) {
                 for (Atom atom : renderedObjects) {
-                    artist.draw(atom.getFigure(), atom.getPosition().x, atom.getPosition().y, atom.getSize().x, atom.getSize().y,
-                            atom.getRotation(), atom.getColor(), atom.getOpacity());
+                    if (!atom.isHidden() && (!showOnlyMarkedAtoms || atom.isMarkedByGod())) {
+                        synchronized (atom.getBindEvents()) {
+                            Event event;
+                            for (int i = atom.getBindEvents().size() - 1; i >= 0 && atom.getBindEvents().size() - maxShownEventsPerAtom < i; i--) {
+                                event = atom.getBindEvents().get(i);
+                                artist.draw(event.getFigure(), event.getPosition().x, event.getPosition().y,
+                                        event.getSize().x, event.getSize().y,
+                                        event.getRotation(), event.getColor(), event.getOpacity() / 2
+                                );
+                            }
+                        }
+                    }
                 }
+                for (Atom atom : renderedObjects) {
+                    if (!atom.isHidden() && (!showOnlyMarkedAtoms || atom.isMarkedByGod())
+                            && atom.inVisibilityZone(shift)) {
+                        artist.draw(
+                                PhysicsConfigurations.NewtonPhysicsConfigurations.DRAW_SIMPLE_SHAPES
+                                        ? DrawFigureType.CIRCLE
+                                        : atom.getFigure(),
+                                atom.getPosition().x, atom.getPosition().y,
+                                atom.getSize().x, atom.getSize().y,
+                                atom.getRotation(), atom.getColor(), atom.getOpacity());
+                        if (isShowSpeedVector() && chosenUniverse.getStage() == UniverseStage.PAUSE) {
+                            artist.writeText(
+                                    atom.getName() + "(" + atom.getSerialNumber() + ")",
+                                    atom.getPosition().x,
+                                    atom.getPosition().y,
+                                    ColorEnum.GREEN
+                            );
+                        }
+                        double speedX = atom.getSpeed().x;
+                        double speedY = atom.getSpeed().y;
+                        double speed = atom.getSpeed().module();
+                        double accelerationX = atom.getAcceleration().x;
+                        double accelerationY = atom.getAcceleration().y;
+                        double acceleration = atom.getAcceleration().module();
+                        double angle = -Math.atan(speedY / speedX);
+                        if (showSpeedVector) {
+                            artist.draw(
+                                    DrawFigureType.TRIANGLE,
+                                    atom.getPosition().x -
+                                            (Math.cos(angle + (Math.PI / 2 * (1 - Math.signum(-speedX))))
+                                                    * atom.getSpeed().module() / 2),
+                                    atom.getPosition().y +
+                                            (Math.sin(angle + (Math.PI / 2 * (1 - Math.signum(-speedX))))
+                                                    * atom.getSpeed().module() / 2),
+                                    speed, atom.getSize().x / 1.5,
+                                    (180 / (Math.PI) * angle + 180) + (90 - 90 * Math.signum(-speedX)),
+                                    atom.getColor(), 0.3);
+                        }
+                        angle = -Math.atan(accelerationY / accelerationX);
+                        if (showAccelerationVector) {
+                            artist.draw(
+                                    DrawFigureType.TRIANGLE,
+                                    atom.getPosition().x -
+                                            (Math.cos(angle + (Math.PI / 2 * (1 - Math.signum(-accelerationX))))
+                                                    * acceleration / 2),
+                                    atom.getPosition().y +
+                                            (Math.sin(angle + (Math.PI / 2 * (1 - Math.signum(-accelerationX))))
+                                                    * acceleration / 2),
+                                    acceleration, atom.getSize().x / 5,
+                                    (180 / (Math.PI) * angle + 180) + (90 - 90 * Math.signum(-accelerationX)),
+                                    ColorEnum.BLUE, 0.3);
+                        }
+                    }
+                }
+            }
+
+            if (rightMouseDownCounter == 0 && leftMouseDownCounter == 0) {
+                artist.drawCursor(CURSOR_TYPE, CURSOR_WIDTH, CURSOR_HEIGHT, em, DEFAULT_EM, shift);
+            } else if (drawNewAtom) {
+                double cursorSize = Math.max(rightMouseDownCounter, leftMouseDownCounter);
+                cursorSize = cursorSize == 0 ? 5 : cursorSize;
+                artist.draw(DrawFigureType.CIRCLE, Mouse.getX() / em + shift.x, 100 / em * DEFAULT_EM - Mouse.getY() / em + shift.y,
+//                    0,
+                        Math.pow(cursorSize / 10, 2d) * 2 / em * DEFAULT_EM,
+//                        Math.pow(3d / 4d * Math.pow(cursorSize, 2d) / Math.PI, 1d / 3d) / em * DEFAULT_EM,
+//                    0,
+                        Math.pow(cursorSize / 10, 2d) * 2 / em * DEFAULT_EM,
+                        0, ColorEnum.BLUE, 1);
             }
         }
 
@@ -280,6 +561,10 @@ public enum God {
 
         public void setShift(ThreeVector shift) {
             this.shift = shift;
+        }
+
+        public void setShowOnlyMarkedAtoms(boolean showOnlyMarkedAtoms) {
+            this.showOnlyMarkedAtoms = showOnlyMarkedAtoms;
         }
     }
 }

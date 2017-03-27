@@ -1,18 +1,28 @@
 package being.physics;
 
+import being.elements.Angel;
 import being.elements.Atom;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 public interface Physics {
-    void gravity(List<Atom> allAtoms, List<Atom> updatedAtoms);
+    void gravity(Collection<Atom> allAtoms, Collection<Atom> updatedAtoms);
 
-    void electromagnetism(List<Atom> allAtoms, List<Atom> updatedAtoms) throws Exception;
+    void electromagnetism(Collection<Atom> allAtoms, Collection<Atom> updatedAtoms) throws Exception;
 
     void nextInstant();
 
     Object getLock();
 
     Set basalObjectsGeneration();
+
+    boolean isPrepared(Angel angel);
+
+    void startWork(Angel angel);
+
+    void finishWork(Angel angel);
+
+    void push(Collection<Atom> allAtoms, Collection<Atom> ownAtoms) throws Exception;
 }

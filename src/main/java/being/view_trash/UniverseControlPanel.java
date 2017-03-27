@@ -14,7 +14,7 @@ import javafx.util.Duration;
 public class UniverseControlPanel extends Application {
     private static AbstractUniverse universe;
     private static UniverseControlPanelController controller;
-    private static final double ATOMS_UPDATE_PERIOD_SECONDS = 0.05;
+    private static final double ATOMS_UPDATE_PERIOD_SECONDS = 0.1;
     private static boolean panelLaunched = false;
 
     @Override
@@ -23,6 +23,8 @@ public class UniverseControlPanel extends Application {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/universe_control_panel.fxml"));
         Parent root = fxmlLoader.load();
         primaryStage.setTitle("Universe42");
+        primaryStage.setX(1100);
+        primaryStage.setY(10);
         Scene scene = new Scene(root);
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -31,7 +33,7 @@ public class UniverseControlPanel extends Application {
         controller.setUniverse(universe);
         controller.init();
         Timeline tableSchedulingUpdater = new Timeline(new KeyFrame(Duration.seconds(ATOMS_UPDATE_PERIOD_SECONDS), event -> {
-            controller.updateObjectsTable();
+            controller.update();
         }));
         tableSchedulingUpdater.setCycleCount(Timeline.INDEFINITE);
         tableSchedulingUpdater.play();

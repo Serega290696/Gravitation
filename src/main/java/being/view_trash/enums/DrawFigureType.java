@@ -1,9 +1,10 @@
 package being.view_trash.enums;
 
-public enum DrawFigure {
+public enum DrawFigureType {
 
     RECT, CIRCLE, TRIANGLE,
-    FON, FON2
+    FON, FON2,
+    STAR
 
 
     ;

@@ -9,6 +9,7 @@
     <SOURCES>
       <root url="file://$PROJECT_DIR$/lib/slick" />
       <root url="jar://$PROJECT_DIR$/lib/slick-util.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/slick-util.jar!/" />
     </SOURCES>
     <jarDirectory url="file://$PROJECT_DIR$/lib/jars" recursive="false" />
     <jarDirectory url="file://$PROJECT_DIR$/lib/slick" recursive="false" />
