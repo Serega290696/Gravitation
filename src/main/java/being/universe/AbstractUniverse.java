@@ -17,6 +17,12 @@ public abstract class AbstractUniverse<P, O> {
     Map<String, List<O>> savedStates = new HashMap<>();
     O focusedAtom;
     volatile ObjectProcessingStage objectProcessingStage = ObjectProcessingStage.DISTRIBUTION;
+    double timeToPause = -1;
+    double timeSinceLastPause = 0;
+    boolean restart = false;
+    double rocketSpeed;
+    double rocketAngle;
+    static String DEFAULT_STATE_NAME = "default_6";//"default_1"
 
 //    Map<String, List<O>> defaultStates = new HashMap<>();
 
@@ -28,12 +34,14 @@ public abstract class AbstractUniverse<P, O> {
 
     public void resume() {
         if (stage == UniverseStage.PAUSE) {
+            timeSinceLastPause = 0;
             stage = UniverseStage.ALIVE;
         }
     }
 
     public void pause() {
         if (stage == UniverseStage.ALIVE) {
+            timeSinceLastPause = 0;
             stage = UniverseStage.PAUSE;
         }
     }
@@ -82,7 +90,7 @@ public abstract class AbstractUniverse<P, O> {
         savedStates.put(stateTitle, new ArrayList<>(objects));
         FileOutputStream fos = null;
         try {
-            fos = new FileOutputStream("states.out");
+            fos = new FileOutputStream(Universe42.STATE_FILE_NAME);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(savedStates);
             oos.flush();
@@ -91,6 +99,7 @@ public abstract class AbstractUniverse<P, O> {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        DEFAULT_STATE_NAME = stateTitle;
     }
 
     public abstract void addObjects(O... object);
@@ -118,4 +127,20 @@ public abstract class AbstractUniverse<P, O> {
     public abstract boolean mousePush(double x, double y, double clickDuration, int mouseKeyCode, boolean onlyCreation);
 
     public abstract void clearAllAtoms();
+
+    public void setTimeToPause(double timeToPause) {
+        this.timeToPause = timeToPause;
+    }
+
+    public void setRestart(boolean restart) {
+        this.restart = restart;
+    }
+
+    public void setRocketSpeed(double rocketSpeed) {
+        this.rocketSpeed = rocketSpeed;
+    }
+
+    public void setRocketAngle(double rocketAngle) {
+        this.rocketAngle = rocketAngle;
+    }
 }

@@ -1,0 +1,82 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="Gravity:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Gravity_jar</output-path>
+    <root id="archive" name="Gravity.jar">
+      <element id="module-output" name="Gravity" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/slick-util.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/jars/lwjgl.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/jars/lwjgl_util.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/slick/ibxm.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/slick/lwjgl.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/slick/jogg-0.0.7.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/slick/lwjgl_util.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/slick/slick-util.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/slick/jorbis-0.0.15.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/slick/slick-util-src.zip" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/slick/lwjgl_util_applet.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/commons/commons-lang3/3.5/commons-lang3-3.5.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/n52/matlab/matlab-control/5.0.0/matlab-control-5.0.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/matlabcontrol-4.1.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/util.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/hg.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/bde.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/ide.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/jmi.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/mde.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/mvm.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/mwt.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/net.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/vrd.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/xml.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/html.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/page.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/beans.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/timer.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/addons.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/common.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/matlab.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/wizard.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/desktop.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/install.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/instwiz.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/lmlogin.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/mwswing.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/product.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/widgets.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/instutil.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/services.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/webproxy.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/fatalexit.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/mlwidgets.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/toolstrip.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/addons_app.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/addons_zip.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/mlservices.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/comparisons.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/deactivation.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/addons_import.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/appmanagement.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/hwsmanagement.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/installbundle.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/installwizard.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/mlwebservices.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/publishparser.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/resource_core.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/sourcecontrol.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/addons_product.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/instructionset.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/webintegration.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/matlabinstaller.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/trialsinstaller.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/activationclient.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/mladdonpackaging.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/addons_import_api.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/toolbox_packaging.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/toolboxmanagement.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/foundation_libraries.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/license_agreement_dialog.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/supportsoftwareinstaller.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/5-Soft/Mathlab/java/jar/addons_search_path_writer.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

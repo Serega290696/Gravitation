@@ -87,7 +87,11 @@ public class ThreeVector implements Cloneable, Serializable {
         double angle = this.angle();
         double angle2 = vector.angle();
         double deltaAngle = angle - angle2;
-        return new ThreeVector(vector.angle(), Math.abs(Math.cos(deltaAngle) * this.module()));
+        if (Math.abs(deltaAngle) <= Math.PI / 2) {
+            return new ThreeVector(vector.angle(), Math.abs(Math.cos(deltaAngle) * this.module()));
+        } else {
+            return new ThreeVector(vector.angle() + Math.PI, Math.abs(Math.cos(deltaAngle) * this.module()));
+        }
     }
 
     public ThreeVector projectRestOn(ThreeVector vector) {

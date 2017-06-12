@@ -34,6 +34,13 @@ public class Atom implements Cloneable, Serializable {
     protected transient Angel angelGuardian;
     private boolean hidden;
 
+    private boolean isRocket = false;
+    private boolean enableEngine = false;
+    private double maxAcceleration;
+    private double maxSpeed;
+    private Atom centreAtom;
+    private double fuelConsumption = 0;
+
     public Atom(double weight, ThreeVector size, ThreeVector position, ThreeVector speed, boolean markedByGod) {
         this(null, weight, size, position, speed, markedByGod);
     }
@@ -53,13 +60,56 @@ public class Atom implements Cloneable, Serializable {
         acceleration = new ThreeVector(0, 0, 0);
         power = new ThreeVector(0, 0, 0);
         previousPosition = new ThreeVector(0, 0, 0);
+        isRocket = false;
     }
 
     public void update(ThreeVector power) {
         this.power = power;
         acceleration = power.divide(weight);
-        speed = speed.plus(acceleration.multiply(PhysicsConfigurations.NewtonPhysicsConfigurations.MOMENT_DURATION));
-        previousPosition = position.plus(speed.plus(power.divide(weight).multiply(PhysicsConfigurations.NewtonPhysicsConfigurations.MOMENT_DURATION)).multiply(PhysicsConfigurations.MOMENT_DURATION));
+        if (isRocket) {
+//            System.out.println("acc_1 = " + acceleration.module());
+//            System.out.println("centreAtom = " + centreAtom);
+//            System.out.println("centreAtom.getPosition() = " + centreAtom.getPosition());
+            ThreeVector distance;
+            double stableOrbitSpeed;
+            if (enableEngine) {
+                distance = centreAtom.getPosition().minus(this.getPosition());
+                stableOrbitSpeed = Math.sqrt(power.module() * distance.module() / weight);
+                if (speed.module() < stableOrbitSpeed) {
+                    double angle;
+                    ThreeVector p = new ThreeVector(distance.angle() + Math.PI / 2, 1);
+//                if (speed.projectOn(p).module() > 10) {
+//                    System.out.println("p = " + p.angle());
+                    angle = speed.projectOn(p).angle();
+//                } else {
+//                    angle = distance.angle() - Math.PI / 2;
+//                }
+//                System.out.println("angle = " + angle);
+                    double tractionAcceleration = Math.min(
+                            maxAcceleration,
+                            10000000
+//                        Math.abs(speed.module() - stableOrbitSpeed) / PhysicsConfigurations.MOMENT_DURATION
+                    );
+                    fuelConsumption += tractionAcceleration * PhysicsConfigurations.MOMENT_DURATION;
+//                System.out.println("fuelConsumption = " + fuelConsumption);
+                    acceleration.plusAndUpdate(new ThreeVector(angle,
+                            tractionAcceleration));
+//                acceleration.plusAndUpdate(new ThreeVector(angle,
+//                        newSpeed));
+//                new ThreeVector(distance.angle()+Math.PI/2, stableOrbitSpeed);
+//                System.out.println("acc_2 = " + acceleration.module());
+                }
+            }
+
+        }
+        speed = speed.plus(acceleration.multiply(PhysicsConfigurations.MOMENT_DURATION));
+        if (isRocket) {
+            rotation = speed.angle();
+        }
+        previousPosition = position.clone();
+//        previousPosition = position.plus(speed.plus(power.divide(weight)
+//                .multiply(PhysicsConfigurations.NewtonPhysicsConfigurations.MOMENT_DURATION))
+//                .multiply(PhysicsConfigurations.MOMENT_DURATION));
 //        previousPosition = position.clone();
     }
 
@@ -68,7 +118,8 @@ public class Atom implements Cloneable, Serializable {
         rotation += 1;
 //    System.out.println(this);
         int bindEventsSize = bindEvents.size();
-        if (!markedByGod && bindEventsSize > PhysicsConfigurations.NewtonPhysicsConfigurations.MAX_EVENTS_AMOUNT_PER_ATOM) {
+        if (!markedByGod && bindEventsSize > PhysicsConfigurations.NewtonPhysicsConfigurations.MAX_EVENTS_AMOUNT_PER_ATOM
+                && !isRocket) {
             synchronized (bindEvents) {
                 Iterator<Event> iterator = bindEvents.iterator();
                 for (int i = 0; iterator.hasNext(); i++) {
@@ -89,6 +140,12 @@ public class Atom implements Cloneable, Serializable {
             bindEvents.add(new Event(this.clone(), relativelyTime));
         }
 //        System.out.println(bindEvents.get(bindEvents.size() - 1).getAtom().hasGuardianAngel());
+    }
+
+    public void resetTrace() {
+        synchronized (bindEvents) {
+            bindEvents.clear();
+        }
     }
 
     public void setColor(ColorEnum color) {
@@ -140,6 +197,10 @@ public class Atom implements Cloneable, Serializable {
             this.relativelyTime = atom.relativelyTime;
             this.angelGuardian = atom.angelGuardian;
             this.hidden = atom.hidden;
+            this.centreAtom = atom.centreAtom;
+            this.maxSpeed = atom.maxSpeed;
+            this.maxAcceleration = atom.maxAcceleration;
+            this.fuelConsumption = atom.fuelConsumption;
         }
 //        System.out.println("hasGuardianAngel = " + hasGuardianAngel);
     }
@@ -165,6 +226,11 @@ public class Atom implements Cloneable, Serializable {
         clone.relativelyTime = this.relativelyTime;
         clone.angelGuardian = this.angelGuardian;
         clone.hidden = this.hidden;
+        clone.isRocket = this.isRocket;
+        clone.centreAtom = this.centreAtom;
+        clone.maxAcceleration = this.maxAcceleration;
+        clone.maxSpeed = this.maxSpeed;
+        clone.fuelConsumption = this.fuelConsumption;
 //        System.out.println("clone.hasGuardianAngel = " + clone.hasGuardianAngel);
         return clone;
     }
@@ -225,6 +291,47 @@ public class Atom implements Cloneable, Serializable {
         this.hidden = hidden;
     }
 
+    public boolean isRocket() {
+        return isRocket;
+    }
+
+    public void setRocket(boolean rocket) {
+        isRocket = rocket;
+//        figure = DrawFigureType.RECT;
+    }
+
+    public double getMaxAcceleration() {
+        return maxAcceleration;
+    }
+
+    public void setMaxAcceleration(double maxAcceleration) {
+        this.maxAcceleration = maxAcceleration;
+    }
+
+    public double getMaxSpeed() {
+        return maxSpeed;
+    }
+
+    public void setMaxSpeed(double maxSpeed) {
+        this.maxSpeed = maxSpeed;
+    }
+
+    public Atom getCentreAtom() {
+        return centreAtom;
+    }
+
+    public void setCentreAtom(Atom centreAtom) {
+        this.centreAtom = centreAtom;
+    }
+
+    public double getFuelConsumption() {
+        return fuelConsumption;
+    }
+
+    public void setFuelConsumption(double fuelConsumption) {
+        this.fuelConsumption = fuelConsumption;
+    }
+
     public void returnOnPreviousState() {
         synchronized (bindEvents) {
             Atom lastState = bindEvents.get(bindEvents.size() - 1).getAtom();
@@ -233,6 +340,10 @@ public class Atom implements Cloneable, Serializable {
             this.position = lastState.getPosition();
             this.speed = lastState.getSpeed();
             this.markedByGod = lastState.isMarkedByGod();
+            this.centreAtom = lastState.centreAtom;
+            this.maxSpeed = lastState.maxSpeed;
+            this.maxAcceleration = lastState.maxAcceleration;
+            this.fuelConsumption = lastState.fuelConsumption;
         }
     }
 
@@ -254,6 +365,7 @@ public class Atom implements Cloneable, Serializable {
 
     public void setMarkedByGod(boolean markedByGod) {
         this.markedByGod = markedByGod;
+        color = ColorEnum.RED;
     }
 
     public ThreeVector getSize() {
@@ -374,20 +486,20 @@ public class Atom implements Cloneable, Serializable {
 
         public Atom build() {
             if (size == null) {
-                if(weight == 0) {
+                if (weight == 0) {
                     weight = 1;
                 }
                 double radius = Math.pow(3d / 4 * weight / Math.PI, 1d / 3);
-                size = new ThreeVector(radius* 2, radius* 2, radius* 2);
+                size = new ThreeVector(radius * 2, radius * 2, radius * 2);
             }
-            if(position == null) {
+            if (position == null) {
                 position = new ThreeVector(0, 0, 0);
             }
-            if(speed == null) {
+            if (speed == null) {
                 speed = new ThreeVector(0, 0, 0);
             }
-            if(name == null) {
-                name = "Atom-r" + (int)(Math.random()* 1000);
+            if (name == null) {
+                name = "Atom-r" + (int) (Math.random() * 1000);
             }
             return new Atom(name, weight, size, position, speed, markedByGod);
         }

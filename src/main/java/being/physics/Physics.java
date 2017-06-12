@@ -4,7 +4,6 @@ import being.elements.Angel;
 import being.elements.Atom;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 public interface Physics {
@@ -12,7 +11,7 @@ public interface Physics {
 
     void electromagnetism(Collection<Atom> allAtoms, Collection<Atom> updatedAtoms) throws Exception;
 
-    void nextInstant();
+    void awaitAngels();
 
     Object getLock();
 

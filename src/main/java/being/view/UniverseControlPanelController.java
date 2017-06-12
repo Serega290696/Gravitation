@@ -4,7 +4,7 @@ import being.God;
 import being.elements.Atom;
 import being.mathematics.MathUtils;
 import being.mathematics.ThreeVector;
-import being.physics.NewtonPhysics;
+import being.physics.physics_impls.NewtonPhysics;
 import being.physics.PhysicsConfigurations;
 import being.universe.AbstractUniverse;
 import being.universe.Universe42;
@@ -74,13 +74,29 @@ public class UniverseControlPanelController {
     private TextField gField;
 
     @FXML
+    private Label speedLabel;
+    @FXML
+    private Label angleLabel;
+    @FXML
+    private Label estimationDurationLabel;
+    @FXML
+    private Slider speedLever;
+    @FXML
+    private Slider angleLever;
+    @FXML
+    private Slider estimationDurationLever;
+
+    private double rocketSpeed = 0;
+    private double rocketAngle = 0;
+    private double rocketEstimationDuration = 0;
+
+    @FXML
     public void upd() {
         PhysicsConfigurations.NewtonPhysicsConfigurations.G = Double.valueOf(gField.getText());
         PhysicsConfigurations.NewtonPhysicsConfigurations.MOMENT_DURATION = Double.valueOf(timeField.getText());
     }
 
     public void init() {
-        System.out.println("UniverseControlPanelController.init");
         objectsTable.setEditable(true);
 //        parametersTable.setEditable(true);
         initTables();
@@ -190,11 +206,17 @@ public class UniverseControlPanelController {
             TableColumn<Atom, Double> position = createColumnThreeVector("position");
             TableColumn<Atom, Double> speed = createColumnThreeVector("speed");
 //            TableColumn size = createColumnThreeVector("size");
+            TableColumn<Atom, Double> fuelConsumption = new TableColumn<>("Fuel");
+            fuelConsumption.setMinWidth(COLUMN_WIDTH);
+            fuelConsumption.setCellValueFactory(p ->
+                    new ReadOnlyObjectWrapper<Double>(MathUtils.round(p.getValue().getFuelConsumption())));
+//            fuelConsumption.<Atom, Double>setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
+            fuelConsumption.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
             TableColumn<Atom, Double> size = new TableColumn<>("Size (sx)");
             size.setMinWidth(COLUMN_WIDTH);
             size.setCellValueFactory(p ->
                     new ReadOnlyObjectWrapper<Double>(MathUtils.round(p.getValue().getSize().x)));
-            size.<Atom, Double>setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
+//            size.<Atom, Double>setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
             size.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
             size.setOnEditCommit(
                     event -> {
@@ -206,7 +228,7 @@ public class UniverseControlPanelController {
             objectsTable.getColumns().
                     addAll(
                             name,
-                            position, speed, size,
+                            position, speed, fuelConsumption, size,
                             weight
                             , angel
                     );
@@ -310,14 +332,41 @@ public class UniverseControlPanelController {
             ObservableList<Pair> pairs = FXCollections.observableArrayList(parameters);
             parametersTable.getItems().clear();
             parametersTable.setItems(pairs);
+//            speedLabel;
+//            angleLabel;
+//            estimationDurationLabel;
+//            r speedLever;
+//            r angleLever;
+//            r estimationDurationLever;
+            double newSpeed = Math.pow(5, speedLever.getValue() / 15) - 1;
+            double newAngle = angleLever.getValue();
+            double newEstimationDuration = estimationDurationLever.getValue();
+            speedLabel.setText("Speed: " + String.valueOf(newSpeed));
+            angleLabel.setText("Angle: " + String.valueOf(newAngle));
+            estimationDurationLabel.setText("Dur.:" + String.valueOf(newEstimationDuration));
+            if (rocketSpeed != newSpeed
+                    || rocketAngle != newAngle
+                    || rocketEstimationDuration != newEstimationDuration) {
+                rocketSpeed = newSpeed;
+                rocketAngle = newAngle;
+                rocketEstimationDuration = newEstimationDuration;
+                universe.setTimeToPause(rocketEstimationDuration);
+                restart();
+                universe.setRocketSpeed(rocketSpeed);
+                universe.setRocketAngle(rocketAngle);
+            }
         }
     }
 
-//    @FXML
-//    public void update() {
-//        update(false);
-//    }
-
+    @FXML
+    public void changeMode() {
+        God.ONE.setRocketMode(!God.ONE.getRocketMode());
+        if (God.ONE.getRocketMode()) {
+            PhysicsConfigurations.DISPLAYING_MOMENT_MIN_DURATION = 0.000001;
+        } else {
+            PhysicsConfigurations.DISPLAYING_MOMENT_MIN_DURATION = PhysicsConfigurations.DEFAULT_DISPLAYING_MOMENT_MIN_DURATION;
+        }
+    }
 
     private TableColumn<Atom, Double> createColumnThreeVector(String columnTitle) {
         TableColumn<Atom, Double> bigColumn = new TableColumn<>(columnTitle);

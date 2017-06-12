@@ -19,7 +19,6 @@ public class UniverseControlPanel extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        System.out.println("JavaFx is started !");
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/universe_control_panel.fxml"));
         Parent root = fxmlLoader.load();
         primaryStage.setTitle("Universe42");

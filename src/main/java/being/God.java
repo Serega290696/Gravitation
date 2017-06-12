@@ -4,6 +4,7 @@ import being.elements.Atom;
 import being.elements.Event;
 import being.exceptions.UniverseCreationException;
 import being.mathematics.ThreeVector;
+import being.physics.physics_impls.NewtonPhysics;
 import being.physics.PhysicsConfigurations;
 import being.universe.*;
 import being.view.Artist;
@@ -37,9 +38,10 @@ public enum God {
     private static final boolean SHOW_CONTROL_PANEL = true;
     private static final boolean SHOW_VISUALISATION = true;
 
-    private static int maxShownEventsPerAtom = PhysicsConfigurations.NewtonPhysicsConfigurations.MAX_EVENTS_AMOUNT_PER_ATOM / 3;
+    private static int maxShownEventsPerAtom = PhysicsConfigurations.NewtonPhysicsConfigurations.MAX_EVENTS_AMOUNT_PER_ATOM / 1;
     private boolean showSpeedVector = true;
     private boolean showAccelerationVector = true;
+    private boolean rocketMode = false;
 
     God() {
         godsWrath = false;
@@ -56,7 +58,8 @@ public enum God {
     public void eatAppleOfKnowledge() {
         System.out.println("WRATH");
 //        godsWrath = true;
-        universes.forEach(AbstractUniverse::bigBang);
+        universes.forEach(u -> u.setRestart(true));
+//        universes.forEach(AbstractUniverse::bigBang);
 //        universes.clear();
     }
 
@@ -133,6 +136,14 @@ public enum God {
         universes.forEach(u -> u.saveState(stateTitle));
     }
 
+    public boolean getRocketMode() {
+        return rocketMode;
+    }
+
+    public void setRocketMode(boolean rocketMode) {
+        this.rocketMode = rocketMode;
+    }
+
     public class GodMind {
         private static final double ZOOM_CHANGING_PER_SECOND = 10;
         private static final float CURSOR_HEIGHT = 30;
@@ -143,7 +154,7 @@ public enum God {
         public int CURSOR_TYPES_AMOUNT = 3;
         private ThreeVector lastMousePosition = new ThreeVector(Mouse.getX(), Mouse.getY(), 0);
 
-        private AbstractUniverse chosenUniverse;
+        private AbstractUniverse<NewtonPhysics, Atom> chosenUniverse;
 
         private final String title;
         public final int DELAY;
@@ -175,9 +186,8 @@ public enum God {
         private GodMind() {
             if (universes.size() > 0) {
                 updateChosenUniverse();
-                Set<Object> oo = chosenUniverse.getObjects();
-                this.objects.addAll(oo.stream().filter(o -> o instanceof Atom)
-                        .map(o -> (Atom) o).collect(Collectors.toList()));
+                Set<Atom> oo = chosenUniverse.getObjects();
+                this.objects.addAll(oo.stream().collect(Collectors.toList()));
             }
             shift = new ThreeVector(0, 0, 0);
             title = "God view";
@@ -187,8 +197,8 @@ public enum God {
             D_WIDTH = 800;
             D_HEIGHT = 800;
             DEFAULT_EM = D_WIDTH / 100;
-//            em = DEFAULT_EM / 1;
-            em = DEFAULT_EM/ 1_000;
+            em = DEFAULT_EM / 1;
+//            em = DEFAULT_EM/ 1_000;
             speedFactor = 1.5;
         }
 
@@ -207,9 +217,7 @@ public enum God {
                 controlPanelIsShown = true;
             }
             if (SHOW_VISUALISATION) {
-                System.out.println("simulationPanelIsLoaded = " + simulationPanelIsLoaded);
                 if (!simulationPanelIsLoaded) {
-                    System.out.println("Init GL");
                     initDisplay();
                     initGL();
                     artist = new Artist(this);
@@ -221,7 +229,6 @@ public enum God {
                     if (controlPanelThread != null && controlPanelThread.isAlive()) {
                         controlPanelThread.interrupt();
                     }
-                    System.out.println("Clean up");
                     cleanUp();
                     simulationPanelIsLoaded = false;
                 }
@@ -332,8 +339,8 @@ public enum God {
                 }
                 universes.forEach(u -> u.setMousePosition(((double) Mouse.getX() / D_WIDTH / em * DEFAULT_EM * 100 + shift.x),
                         ((double) (D_HEIGHT - Mouse.getY()) / D_HEIGHT * 100 / em * DEFAULT_EM + shift.y)));
-                Object focusedAtom = chosenUniverse.getFocusedAtom();
-                if (focusedAtom != null && focusedAtom instanceof Atom) {
+                Atom focusedAtom = chosenUniverse.getFocusedAtom();
+                if (focusedAtom != null) {
                     shift.x = ((Atom) focusedAtom).getPosition().x - 50 / em * DEFAULT_EM;
                     shift.y = ((Atom) focusedAtom).getPosition().y - 50 / em * DEFAULT_EM;
                     shift.z = ((Atom) focusedAtom).getPosition().z - 50 / em * DEFAULT_EM;
@@ -468,7 +475,9 @@ public enum God {
                     if (!atom.isHidden() && (!showOnlyMarkedAtoms || atom.isMarkedByGod())) {
                         synchronized (atom.getBindEvents()) {
                             Event event;
-                            for (int i = atom.getBindEvents().size() - 1; i >= 0 && atom.getBindEvents().size() - maxShownEventsPerAtom < i; i--) {
+                            for (int i = atom.getBindEvents().size() - 1;
+                                 i >= 0 ;//&& atom.getBindEvents().size() - maxShownEventsPerAtom < i;
+                                 i--) {
                                 event = atom.getBindEvents().get(i);
                                 artist.draw(event.getFigure(), event.getPosition().x, event.getPosition().y,
                                         event.getSize().x, event.getSize().y,
@@ -487,7 +496,7 @@ public enum God {
                                         : atom.getFigure(),
                                 atom.getPosition().x, atom.getPosition().y,
                                 atom.getSize().x, atom.getSize().y,
-                                atom.getRotation(), atom.getColor(), atom.getOpacity());
+                                atom.getRotation(), atom.getColor(), atom.getOpacity() / atom.getPosition().z);
                         if (isShowSpeedVector() && chosenUniverse.getStage() == UniverseStage.PAUSE) {
                             artist.writeText(
                                     atom.getName() + "(" + atom.getSerialNumber() + ")",

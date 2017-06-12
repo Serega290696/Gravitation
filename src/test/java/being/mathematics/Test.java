@@ -1,7 +1,13 @@
 package being.mathematics;
 
-import java.io.File;
+//import being.MatlabControl;
+
+import matlabcontrol.MatlabProxy;
+import matlabcontrol.MatlabProxyFactory;
+
+import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -11,6 +17,101 @@ public class Test {
 //    private List<String> st = Collections.synchronizedList(new ArrayList<String>());
 
     private Object o = new Object();
+
+    @org.junit.Test
+    public void ma() throws Exception {
+//        MatlabControl mc = new MatlabControl();
+        MatlabProxyFactory factory = new MatlabProxyFactory();
+        MatlabProxy proxy = factory.getProxy();
+        //... //Use the proxy as desired ...
+        proxy.eval("2+2");
+        proxy.disconnect();
+
+//        mc.eval("D:\\5-Soft\\Mathlab\\Untitled12.m");
+//        mc.eval(new String("help"));
+//        mc.eval(new String("help(plot)"));
+//        mc.eval(new String("x=5"));
+//        mc.eval(new String("x=5;"));
+//        mc.eval(new String("sqrt(x)"));
+//        mc.eval(new String("myScript"));
+
+    }
+
+    @org.junit.Test
+    public void testMathlabCall() throws Exception {
+        String command = "tasklist";
+        Process child = Runtime.getRuntime().exec(command);
+
+        InputStream inputStream = child.getInputStream();
+        BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+        byte[] bb = new byte[10000];
+        bufferedInputStream.read(bb);
+//        inputStream.read(bb);
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < bb.length; i++) {
+            byte b = bb[i];
+            if (b != 0) {
+                builder.append(Byte.toString(b)).append(", ");
+            }
+        }
+        System.out.println(builder.toString());
+        // Get output stream to write from it
+        OutputStream out = child.getOutputStream();
+
+        out.write("cd C:/ /r/n".getBytes());
+        out.flush();
+        out.write("dir /r/n".getBytes());
+        out.close();
+//        runtime.exec("cmd /c start cmd.exe");
+
+    }
+
+    @org.junit.Test
+    public void arrayAsKeyInHasmapTest() throws Exception {
+        HashMap<double[], Integer> map = new HashMap<>();
+        double[] a1 = {1, 2, 3};
+        map.put(a1, 1);
+        double[] a2 = {4, 5, 6};
+        map.put(a2, 2);
+
+        Integer value1 = map.get(a1);
+        a1[0] = 10;
+        a1[1] = 11;
+        a1[2] = 12;
+        Integer value2 = map.get(a1);
+        System.out.println("value1 = " + value1);
+        System.out.println("value2 = " + value2);
+    }
+
+    @org.junit.Test
+    public void name9() throws Exception {
+        class B extends A {
+            //            @Override
+            void method() {
+                System.out.println("BBB");
+            }
+        }
+        A a = new B();
+        a.method();
+        System.out.println(a.getClass());
+        System.out.println(a.getClass() == B.class);
+        System.out.println(a instanceof A);
+        System.out.println(a instanceof B);
+        ArrayList<A> ll = new ArrayList<>();
+        ll.add(a);
+        ll.get(0).method();
+        aaa(a);
+    }
+
+    class A {
+        void method() {
+            System.out.println("AaAAAAAAAAAAAa");
+        }
+    }
+
+    public void aaa(A a) {
+        a.method();
+    }
 
     @org.junit.Test
     public void name8() throws Exception {

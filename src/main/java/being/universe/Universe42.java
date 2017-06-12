@@ -1,11 +1,15 @@
 package being.universe;
 
 import being.God;
+import being.elements.AngelsFactory;
+import being.elements.OneMomentAngel;
 import being.physics.PhysicsConfigurations;
 import being.elements.Angel;
 import being.elements.Atom;
 import being.mathematics.ThreeVector;
-import being.physics.NewtonPhysics;
+import being.physics.physics_impls.AntigravityPhysics;
+import being.physics.physics_impls.NewtonPhysics;
+import being.physics.physics_impls.RightGravityLeftAntigravityPhysics;
 
 import java.io.*;
 import java.util.*;
@@ -14,11 +18,11 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class Universe42 extends AbstractUniverse<NewtonPhysics, Atom> {
     private static final boolean FOLLOW_IF_ONE_MARKED_ATOM = false;
     private static final int ANGELS_AMOUNT = 1;
-    private static final String DEFAULT_STATE_NAME = "empty";//"default_1"
-    private static final String STATE_FILE_NAME = "states.out";
+    public static final String STATE_FILE_NAME = "states.out";
+    private static final boolean RESTORE_STATES_WHEN_START_UP = false;
+    private static final boolean LEARNING_STATES_MODE = true;
 
     private final List<Angel> angels = new ArrayList<>();
-//    private final List<Atom> atoms = new ArrayList<>();
 
     private Atom movedAtom;
     private double actualMomentDuration;
@@ -26,6 +30,9 @@ public class Universe42 extends AbstractUniverse<NewtonPhysics, Atom> {
     private List<Atom> atomsForDeletion = new LinkedList<>();
     private volatile boolean objectsAvailable = true;
     private Atom changingSpeedAtom = null;
+    private Class<? extends Angel> angelImpl;
+    private int learningStateCounter = 0;
+
 
     public Universe42() {
         this.type = UniverseType.UNIVERSE_42;
@@ -34,83 +41,111 @@ public class Universe42 extends AbstractUniverse<NewtonPhysics, Atom> {
 //        this.objects = new HashSet<>(physics.basalObjectsGeneration());
 //        this.spacetime = (Spacetime) objects.stream().filter(o -> o instanceof Spacetime).findFirst().get();
         generateStates();
+        angelImpl = LEARNING_STATES_MODE ?
+                OneMomentAngel.class : Angel.class;
     }
 
     @Override
     public void bigBang() {
-        System.out.println("Universe42.bigBang");
-        stage = UniverseStage.ALIVE;
-        objects.clear();
-//        atoms.clear();
-
-        createAngels();
-        createDefaultAtoms();
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        long lastInstant = System.currentTimeMillis();
-        long beginTime = System.currentTimeMillis();
-        long elapsedTime;
-        long waitingTime;
-        int warningCounter = 0;
-        while (!God.ONE.isGodsWrath()) {
-//            if (stage == UniverseStage.ALIVE) {
-            nextInstant();
-            // todo wait angels
-            elapsedTime = System.currentTimeMillis() - lastInstant;
-            waitingTime = (long) (PhysicsConfigurations.DISPLAYING_MOMENT_MIN_DURATION * 1000 - elapsedTime);
-            if (warningCounter < 10) {
-                actualMomentDuration *= (warningCounter + 1);
-                actualMomentDuration += elapsedTime + Math.abs(waitingTime);
-                actualMomentDuration /= warningCounter + 2;
-                warningCounter++;
-            } else {
-                warningCounter = 0;
-                actualMomentDuration = elapsedTime + Math.abs(waitingTime);
+        while (true) {// todo
+            System.out.println("Universe42.bigBang");
+            stage = UniverseStage.ALIVE;
+            objects.clear();
+            if (angels.size() == 0) {
+                System.out.println("Angles creating(" + ANGELS_AMOUNT + "). . .");
+                createAngels();
             }
-//            if (waitingTime < elapsedTime / 1) {
-//                if (warningCounter < 0) {
-//                    warningCounter++;
-//                } else {
-//                    System.out.println("Overload: " + waitingTime + "/" + elapsedTime);
-//                    actualMomentDuration = elapsedTime;
-//                    warningCounter = 0;
-//                }
-//            }
-//            System.out.println("Overload: " + waitingTime + "/" + elapsedTime);
-            if (waitingTime > 0) {
-//                absoluteTime += waitingTime;
-                try {
-                    Thread.sleep(waitingTime);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+            System.out.println("Atoms creating. . .");
+            createDefaultAtoms();
+            System.out.println("Objects generating complete\n");
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            long lastInstant = System.currentTimeMillis();
+            long beginTime = System.currentTimeMillis();
+            long elapsedTime;
+            long waitingTime;
+            int warningCounter = 0;
+            for (Atom atom : objects) {
+                if (atom.isRocket()) {
+                    atom.setSpeed(new ThreeVector(rocketAngle, rocketSpeed));
                 }
-            } else {
             }
-            lastInstant = System.currentTimeMillis();
-//            }
+            timeSinceLastPause = 0;
+
+            for (Angel angel : angels) {
+                if (!angel.isAlive()) {
+                    angel.start();
+                }
+            }
+            while (!God.ONE.isGodsWrath()) {
+//                if (stage != UniverseStage.PAUSE) {
+//                    if (LEARNING_STATES_MODE) {
+//                        generateLearningState();
+//                    }
+//                }
+                awaitAngels();
+                nextInstant();
+                if (LEARNING_STATES_MODE && learningStateCounter % 100 == 0) {
+                    System.out.println("Learning state #" + learningStateCounter);
+                }
+//                try {
+//                    Thread.sleep(2000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+                elapsedTime = System.currentTimeMillis() - lastInstant;
+                waitingTime = (long) (PhysicsConfigurations.DISPLAYING_MOMENT_MIN_DURATION * 1000 - elapsedTime);
+                if (warningCounter < 10) {
+                    actualMomentDuration *= (warningCounter + 1);
+                    actualMomentDuration += elapsedTime + Math.abs(waitingTime);
+                    actualMomentDuration /= warningCounter + 2;
+                    warningCounter++;
+                } else {
+                    warningCounter = 0;
+                    actualMomentDuration = elapsedTime + Math.abs(waitingTime);
+                }
+                if (waitingTime > 0) {
+                    try {
+                        Thread.sleep(waitingTime);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                }
+                if (restart) {
+                    restart = false;
+                    bigBang();
+                }
+                if (God.ONE.getRocketMode() && timeToPause > 0 && timeSinceLastPause >= timeToPause) {
+                    pause();
+                } else {
+                    timeSinceLastPause += elapsedTime;
+                }
+                lastInstant = System.currentTimeMillis();
+            }
         }
     }
 
+    private void awaitAngels() {
+        physics.awaitAngels();
+    }
+
     private void createAngels() {
+        for (Angel angel : angels) {
+            angel.setStopped(true);
+        }
         angels.clear();
         ArrayList<Atom> atomsTmp = new ArrayList<>(objects);
-        Angel anael = new Angel("Anael", physics, this, objects);
-        Angel sashiel = new Angel("Sashiel", physics, this, objects);
-        Angel raphael = new Angel("Raphael", physics, this, objects);
-        Angel michael = new Angel("Michael", physics, this, objects);
-        Angel gabriel = new Angel("Gabriel", physics, this, objects);
-        Angel cassiel = new Angel("Cassiel", physics, this, objects);
-        Angel metatron = new Angel("Metatron", physics, this, objects);
-//        Angel metatron2 = new Angel("Metatron2", physics, this, objects);
-//        Angel metatron3 = new Angel("Metatron3", physics, this, objects);
-//        Angel metatron4 = new Angel("Metatron4", physics, this, objects);
-//        Angel metatron5 = new Angel("Metatron4", physics, this, objects);
-//        Angel metatron6 = new Angel("Metatron4", physics, this, objects);
-//        Angel metatron7 = new Angel("Metatron4", physics, this, objects);
-//        Angel metatron8 = new Angel("Metatron4", physics, this, objects);
+        Angel anael = AngelsFactory.getInstance(angelImpl, "Anael", physics, this, objects);
+        Angel sashiel = AngelsFactory.getInstance(angelImpl, "Sashiel", physics, this, objects);
+        Angel raphael = AngelsFactory.getInstance(angelImpl, "Raphael", physics, this, objects);
+        Angel michael = AngelsFactory.getInstance(angelImpl, "Michael", physics, this, objects);
+        Angel gabriel = AngelsFactory.getInstance(angelImpl, "Gabriel", physics, this, objects);
+        Angel cassiel = AngelsFactory.getInstance(angelImpl, "Cassiel", physics, this, objects);
+        Angel metatron = AngelsFactory.getInstance(angelImpl, "Metatron", physics, this, objects);
 
         angels.add(anael);
         angels.add(sashiel);
@@ -119,38 +154,27 @@ public class Universe42 extends AbstractUniverse<NewtonPhysics, Atom> {
         angels.add(gabriel);
         angels.add(cassiel);
         angels.add(metatron);
-//        angels.add(metatron2);
-//        angels.add(metatron3);
-//        angels.add(metatron4);
-//        angels.add(metatron5);
-//        angels.add(metatron6);
-//        angels.add(metatron7);
-//        angels.add(metatron8);
         if (ANGELS_AMOUNT < angels.size()) {
             angels.retainAll(angels.subList(0, ANGELS_AMOUNT));
         }
         physics.loadAngles(angels);
-        System.out.println("angels.size() = " + angels.size());
-        for (Angel angel : angels) {
-            angel.start();
-        }
     }
 
     private void nextInstant() {
-//        while (objectProcessingStage != ObjectProcessingStage.DISTRIBUTION) ;
-//        while (!objectsAvailable) ;
-//        objectsAvailable = false;
-//        atoms.removeAll(atomsForDeletion);
+        if (stage != UniverseStage.PAUSE) {
+            if (LEARNING_STATES_MODE) {
+                generateLearningState();
+            }
+        }
         if (atomsForDeletion != null && atomsForDeletion.size() > 0) {
+            angels.forEach(a -> a.removeAtomsIfExist(atomsForDeletion));
             objects.removeAll(atomsForDeletion);
             atomsForDeletion.clear();
         }
-        angels.forEach(a -> a.removeAtomsIfExist(atomsForDeletion));
         if (atomsForAdding != null && atomsForAdding.size() > 0) {
             objects.addAll(atomsForAdding);
             atomsForAdding.clear();
         }
-//        objectsAvailable = true;
         for (Atom atom : objects) {
             if (!atom.hasGuardianAngel()) {
                 Angel chosenAngel = chooseGuardianAngel();
@@ -159,7 +183,6 @@ public class Universe42 extends AbstractUniverse<NewtonPhysics, Atom> {
                 atom.setAngelGuardian(chosenAngel);
             }
         }
-//        objectProcessingStage = ObjectProcessingStage.MOVING;
 
         if (FOLLOW_IF_ONE_MARKED_ATOM && objects.stream().filter(Atom::isMarkedByGod).count() == 1) {
             God.ONE.MIND.setShift(
@@ -172,8 +195,8 @@ public class Universe42 extends AbstractUniverse<NewtonPhysics, Atom> {
             );
         }
 
-        physics.nextInstant();
-//        setObjectProcessingStage(ObjectProcessingStage.DISPLAYING);
+        physics.goAngels();
+
         if (mousePosition != null && movedAtom != null) {
             movedAtom.setPosition(mousePosition);
         }
@@ -209,7 +232,6 @@ public class Universe42 extends AbstractUniverse<NewtonPhysics, Atom> {
                     0
             ));
             return false;
-//            changingSpeedAtom = null;
         }
         return true;
     }
@@ -235,16 +257,11 @@ public class Universe42 extends AbstractUniverse<NewtonPhysics, Atom> {
                 movedAtom = null;
                 return;
             }
-//        else{
-//            movedAtom = null;
-//            intersectSomeAtom = true;
-//        }
 
 
             if (!intersectSomeAtom) {
                 Atom newAtom = new Atom.AtomCreator()
                         .generateName(objects)
-//                .setName("Eve")
                         .generateSize(Math.pow(clickDuration / 10, 2d) / God.ONE.MIND.em * God.ONE.MIND.DEFAULT_EM)
                         .setSpeed(new ThreeVector(0, 0, 0))
                         .setPosition(new ThreeVector(x, y, 0))
@@ -295,7 +312,83 @@ public class Universe42 extends AbstractUniverse<NewtonPhysics, Atom> {
 
     @Override
     public void createDefaultAtoms() {
-        restartUniverseInState(savedStates.get(DEFAULT_STATE_NAME));
+        if (LEARNING_STATES_MODE) {
+            generateLearningState();
+        } else {
+            restartUniverseInState(savedStates.get(DEFAULT_STATE_NAME));
+        }
+    }
+
+    private double rand(double min, double max) {
+        return min + Math.random() * (max - min);
+    }
+
+    private long rand(long min, long max) {
+        return (long) (min + (max - min) * Math.random());
+    }
+
+    private void generateLearningState() {
+        objects.clear();
+        for (Angel angel : angels) {
+            angel.removeAtoms();
+        }
+        long minAmount = 2;
+        long maxAmount = 5;
+        double minDistance = 20;
+        double maxDistance = 50;
+        long minWeight = (long) Math.pow(10, 11);
+        long maxWeight = (long) Math.pow(10, 13);
+        long rocketMinWeight = (long) Math.pow(10, 4);
+        long rocketMaxWeight = (long) Math.pow(10, 6);
+        double secondObjectPositionAngle = Math.PI * 2;
+        long minSpeed = 0;
+        long maxSpeed = 20;
+        double speedAngleRadiansVariance = Math.PI * 2;
+        ThreeVector markedAtomPosition = new ThreeVector(0, 0, 0);
+        long amount = (long) (rand(minAmount, maxAmount));
+        for (int i = 0; i < amount; i++) {
+            double weight = rand(minWeight, maxWeight);
+            double speedVectorAngle = Math.random() * speedAngleRadiansVariance;
+            double speedModule = 0;
+            double width = weight / maxWeight * 8;
+            double height = weight / maxWeight * 8;
+            double posX;
+            double posY;
+            double posZ;
+            if (i == 0) {
+                weight = rand(rocketMinWeight, rocketMaxWeight);
+                speedModule = rand(minSpeed, maxSpeed);
+                width = 7 * weight / rocketMaxWeight;
+                height = 7 * weight / rocketMaxWeight;
+                posX = 50;
+                posY = 50;
+                posZ = 50;
+                markedAtomPosition = new ThreeVector(posX, posY, posZ);
+            } else {
+                ThreeVector atomPosition = markedAtomPosition.plus(new ThreeVector(
+                        rand(0, secondObjectPositionAngle) + Math.PI / 2, rand(minDistance, maxDistance)));
+                atomPosition.z = rand(0, secondObjectPositionAngle) / 2;
+                posX = atomPosition.x;
+                posY = atomPosition.y;
+                posZ = atomPosition.z;
+            }
+            ThreeVector speed = new ThreeVector(speedVectorAngle, speedModule);
+            speed.z = rand(0, speedModule) / 2;
+            ThreeVector size = new ThreeVector(width, height, (width+height) / 2);
+            ThreeVector position = new ThreeVector(posX, posY, posZ);
+            Atom atom = new Atom.AtomCreator()
+                    .generateName(objects)
+                    .setSpeed(speed)
+                    .setPosition(position)
+                    .setMarkedByGod(i == 0)
+                    .setWeight(weight)
+                    .setSize(size)
+                    .build();
+            atom.setHasGuardianAngel(false);
+            atom.resetTrace();
+            addObjects(atom);
+        }
+        learningStateCounter++;
     }
 
     @Override
@@ -306,7 +399,6 @@ public class Universe42 extends AbstractUniverse<NewtonPhysics, Atom> {
     @Override
     public void deleteObject(Atom atom) {
         objects.remove(atom);
-//        atomsForDeletion.add(atom);
     }
 
     void restartUniverseInState(List<Atom> newObjects) {
@@ -319,13 +411,10 @@ public class Universe42 extends AbstractUniverse<NewtonPhysics, Atom> {
         for (Atom o : newObjects) {
             Atom clone = o.clone();
             clone.setHasGuardianAngel(false);
+            clone.resetTrace();
             addObjects(clone);
         }
-//        Collections.addAll(objects, newObjects);
         System.out.println(objects.size());
-
-//        this.atoms.addAll(objects.stream().filter(o -> o instanceof Atom)
-//                .map(o -> (Atom) o).collect(Collectors.toList()));
     }
 
     @Override
@@ -348,20 +437,7 @@ public class Universe42 extends AbstractUniverse<NewtonPhysics, Atom> {
         ArrayList<Atom> default3 = new ArrayList<>();
         ArrayList<Atom> default4 = new ArrayList<>();
         ArrayList<Atom> default5 = new ArrayList<>();
-//        default1.add(new Atom.AtomCreator()
-//                .setName("Adam")
-//                .setWeight(1500)
-//                .setSpeed(new ThreeVector(-10, 0, 0))
-//                .setPosition(new ThreeVector(60, 63, 0))
-//                .setMarkedByGod(false)
-//                .build());
-//        default1.add(new Atom.AtomCreator()
-//                .setName("Eve")
-//                .setWeight(1500)
-//                .setSpeed(new ThreeVector(10, 0, 0))
-//                .setPosition(new ThreeVector(40, 50, 0))
-//                .setMarkedByGod(true)
-//                .build());
+        ArrayList<Atom> default6 = new ArrayList<>();
         double earthAngle = Math.PI;
         double moonAngle = earthAngle;
         double sonAngle = 0;
@@ -472,7 +548,16 @@ public class Universe42 extends AbstractUniverse<NewtonPhysics, Atom> {
         double neptuneSpeedY = neptuneSpeed * Math.sin(neptuneAngle + Math.PI / 2);
         double plutoSpeedY = plutoSpeed * Math.sin(plutoAngle + Math.PI / 2);
 
-
+        Atom rocket = new Atom.AtomCreator()
+                .setName("Rocket")
+                .setSize(new ThreeVector(0.2, 0.2, 0.2))
+//                .setSpeed(new ThreeVector(earthSpeedX, earthSpeedY, 0))//3_333_333
+                .setPosition(new ThreeVector(earthPosX + earthSize, earthPosY, 0))
+                .setMarkedByGod(true)
+                .setWeight(100_000)
+                .build();
+        rocket.setRocket(true);
+        default1.add(rocket);
         default1.add(new Atom.AtomCreator()
                 .setName("Earth")
                 .setSize(new ThreeVector(earthSize, earthSize, earthSize))
@@ -487,7 +572,7 @@ public class Universe42 extends AbstractUniverse<NewtonPhysics, Atom> {
                 .setSize(new ThreeVector(moonSize, moonSize, moonSize))
                 .setSpeed(new ThreeVector(moonSpeedX, moonSpeedY, 0))//3_333_333
                 .setPosition(new ThreeVector(moonPosX, moonPosY, 0))
-                .setMarkedByGod(true)
+                .setMarkedByGod(false)
                 .build());
         default1.add(new Atom.AtomCreator()
                 .setName("Son")
@@ -643,6 +728,32 @@ public class Universe42 extends AbstractUniverse<NewtonPhysics, Atom> {
                 .setPosition(new ThreeVector(80, 72, 0))
                 .setSpeed(new ThreeVector(-60, 0, 0))
                 .build());
+
+        Atom planet = new Atom.AtomCreator()
+                .setName("Planet")
+                .setWeight(10_000)
+                .setPosition(new ThreeVector(50, 50, 0))
+                .setSpeed(new ThreeVector(0, 0, 0))
+                .build();
+        Atom rocket2 = new Atom.AtomCreator()
+                .setName("Rocket")
+                .setWeight(1)
+                .setPosition(new ThreeVector(50, 20, 0))
+                .setSpeed(new ThreeVector(45, 0, 0))
+                .build();
+        rocket2.setMarkedByGod(true);
+        rocket2.setRocket(true);
+//        Rocket rocket = new Rocket.RocketCreator()
+//                .setName("Rocket")
+//                .setWeight(1)
+//                .setPosition(new ThreeVector(50, 20, 0))
+//                .setSpeed(new ThreeVector(20, 0, 0))
+//                .build();
+        rocket2.setCentreAtom(planet);
+        rocket2.setMaxAcceleration(30);
+        rocket2.setMaxSpeed(100);
+        default6.add(planet);
+        default6.add(rocket2);
 //        saveState("empty", empty);
 //        saveState("default_1", default1);
 //        saveState("default_2", default2);
@@ -691,12 +802,13 @@ public class Universe42 extends AbstractUniverse<NewtonPhysics, Atom> {
 //            e.printStackTrace();
 //        }
         try {
-            if (new File(STATE_FILE_NAME).exists()) {
+            if (new File(STATE_FILE_NAME).exists() && RESTORE_STATES_WHEN_START_UP) {
                 FileInputStream fis = new FileInputStream(STATE_FILE_NAME);
                 ObjectInputStream oin = new ObjectInputStream(fis);
                 HashMap<String, List<Atom>> map = (HashMap<String, List<Atom>>) oin.readObject();
                 Set<Map.Entry<String, List<Atom>>> set = map.entrySet();
                 Iterator<Map.Entry<String, List<Atom>>> iterator = set.iterator();
+                System.out.println("Restore states processing. . .");
                 while (iterator.hasNext()) {
                     Map.Entry<String, List<Atom>> mentry = iterator.next();
                     System.out.print("key: " + mentry.getKey() + " & Value: ");
@@ -728,6 +840,9 @@ public class Universe42 extends AbstractUniverse<NewtonPhysics, Atom> {
         }
         if (!savedStates.containsKey("default_5")) {
             saveState("default_5", default5);
+        }
+        if (!savedStates.containsKey("default_6")) {
+            saveState("default_6", default6);
         }
     }
 

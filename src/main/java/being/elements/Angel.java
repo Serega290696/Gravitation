@@ -14,15 +14,15 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Angel extends Thread implements Serializable {
-    private final Collection<Atom> allAtoms;
-    private final Collection<Atom> ownAtoms;
-    private final Collection<Atom> atomsForDeletion = new HashSet<>();
-    private final Collection<Atom> atomsForAdding = new HashSet<>();
-    private final Physics physics;
-    private final AbstractUniverse universe;
-    private int pip;
+    final Collection<Atom> allAtoms;
+    final Collection<Atom> ownAtoms;
+    final Collection<Atom> atomsForDeletion = new HashSet<>();
+    final Collection<Atom> atomsForAdding = new HashSet<>();
+    final Physics physics;
+    final AbstractUniverse universe;
+    int pip;boolean stopped;
 
-    public Angel(String name, Physics physics, AbstractUniverse universe, Collection<Atom> atoms) {
+    Angel(String name, Physics physics, AbstractUniverse universe, Collection<Atom> atoms) {
         super.setName(name);
         this.allAtoms = atoms;
         this.physics = physics;
@@ -30,6 +30,7 @@ public class Angel extends Thread implements Serializable {
 
         setDaemon(true);
         this.ownAtoms = new CopyOnWriteArrayList<>();
+        this.stopped = false;
     }
 
     public void addAtom(Atom atom) {
@@ -42,10 +43,12 @@ public class Angel extends Thread implements Serializable {
     public void run() {
         System.out.println(this);
 //        synchronized (physics.getLock()) {
+        System.out.println("!stopped = " + !stopped);
+        System.out.println("!God.ONE.isGodsWrath() = " + !God.ONE.isGodsWrath());
         while (!God.ONE.isGodsWrath()) {
             if(pip == 2000) {
                 pip = 0;
-                System.out.println("PIP: " + ownAtoms.size());
+//                System.out.println("PIP: " + ownAtoms.size());
             }else {
                 pip+= 1000* PhysicsConfigurations.NewtonPhysicsConfigurations.MOMENT_DURATION;
             }
@@ -111,6 +114,8 @@ public class Angel extends Thread implements Serializable {
             }
         }
 //        }
+        System.out.println("!stopped = " + !stopped);
+        System.out.println("!God.ONE.isGodsWrath() = " + !God.ONE.isGodsWrath());
         System.out.println(getName() + " disappeared");
     }
 
@@ -130,5 +135,9 @@ public class Angel extends Thread implements Serializable {
     public void removeAtomsIfExist(List<Atom> atom) {
         ownAtoms.removeAll(atom);
 //        atomsForDeletion.addAll(atom);
+    }
+
+    public void setStopped(boolean stopped) {
+        this.stopped = stopped;
     }
 }

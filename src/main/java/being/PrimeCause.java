@@ -1,7 +1,6 @@
 package being;
 
 import being.exceptions.UniverseCreationException;
-import being.physics.NewtonPhysics;
 import being.universe.AbstractUniverse;
 import being.universe.UniverseType;
 
